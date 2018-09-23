@@ -11,3 +11,10 @@
 	sqlist.c sqlist.h		定义并实现了线性表的顺序表示
 	linklist.c linklist.h	定义并实现了线性表的链式表示
 
+5、 代码结构
+
+			linear_table_func
+			  |			|
+			  |			|
+			  |			|
+			sqlist	 linklist	

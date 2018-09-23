@@ -120,7 +120,7 @@ static status_t linear_table_test_run(test_t *test)
 	if (status != OK)
 		DEBUG("linear_table_elem_insert error\n");
 	else {
-		DEBUG("after insert %d at pos 3, the list data are: \n");
+		DEBUG("after insert %d at pos 3, the list data are: \n", elem);
 		ltable->linear_table_traverse(ltable, linear_table_test_visit);
 	}
 	//删除测试
@@ -129,7 +129,7 @@ static status_t linear_table_test_run(test_t *test)
 	if (status != OK)
 		DEBUG("linear_table_elem_delete error\n");
 	else {
-		DEBUG("after delete %d at pos 3, the list data are: \n");
+		DEBUG("after delete %d at pos 3, the list data are: \n", elem);
 		ltable->linear_table_traverse(ltable, linear_table_test_visit);
 	}
 }

@@ -15,9 +15,7 @@ status_t sqlist_init(linear_table_t *ltable)
 	l->length = 0;
 	l->listsize = LIST_INIT_SIZE;
 
-	return OK;
-}
-
+	return OK; } 
 status_t sqlist_uninit(linear_table_t *ltable)
 {
 	sqlist_t *l = (sqlist_t *)ltable;
@@ -77,15 +75,18 @@ status_t sqlist_elem_get(linear_table_t *ltable, int32_t pos, void *elem)
 
 int32_t sqlist_elem_locate(linear_table_t *ltable, void *e, compare_t compare)
 {
+	uint8_t *elem = NULL;
 	int32_t i = 0;
 	sqlist_t *l = (sqlist_t *)ltable;
 
 	if (!l || !compare)
 		return INFEASIBLE;
 
+	elem = l->elem;
 	for (; i < l->length; i++) {
-		if (compare(e, l->elem + i * l->elem_size) == TRUE)	
+		if (compare(e, elem) == TRUE)	
 			return (i + 1);
+		elem += l->elem_size;
 	}
 
 	return 0;
@@ -93,13 +94,16 @@ int32_t sqlist_elem_locate(linear_table_t *ltable, void *e, compare_t compare)
 
 static int32_t sqlist_elem_local_locate(linear_table_t *ltable, void *e)
 {
+	uint8_t *elem = NULL;
 	int32_t i = 0;
 	int32_t pos = 0;
 	sqlist_t *l = (sqlist_t *)ltable;
 
+	elem = l->elem;
 	for (; i < l->length; i++)	{
-		if (!memcmp(e, l->elem + l->elem_size * i, l->elem_size))
+		if (!memcmp(e, elem, l->elem_size))
 			return i + 1;
+		elem += l->elem_size;
 	}
 	
 	return 0;
@@ -143,23 +147,31 @@ status_t sqlist_elem_next(linear_table_t *ltable, void *e, void *next_e)
 
 status_t sqlist_elem_insert(linear_table_t *ltable, int32_t pos, void *e)
 {
-	int32_t i = 0;
+	uint8_t *elem = NULL, *elem_prev = NULL;
 	uint8_t *newbase = NULL;
+	int32_t i = 0;
 	sqlist_t *l = (sqlist_t*)ltable;
 
 	if (!l || pos < 1 || pos > l->length + 1)
 		return INFEASIBLE;
 
+	//如果当前空间不足，则重新分配空间
 	if (l->length >= l->listsize) {
 		newbase = (uint8_t *)realloc(l->elem, (l->listsize + LISTINCREMENT) * l->elem_size);
 		memset(l->elem + (l->listsize) * l->elem_size, 0, LISTINCREMENT * l->elem_size);
 		l->listsize += LISTINCREMENT;
 		l->elem = newbase;
 	}
+
+	elem = l->elem + (l->length) * l->elem_size;
+	elem_prev = l->length > 0 ? elem - l->elem_size : elem;
 	for	(i = l->length; i > pos - 1; i--) {
-		memcpy(l->elem + i * l->elem_size, l->elem + (i - 1) * l->elem_size, l->elem_size);
+		memcpy(elem, elem_prev, l->elem_size);
+		elem -= l->elem_size;
+		elem_prev -= l->elem_size;
 	}
-	memcpy(l->elem + i * l->elem_size, e, l->elem_size);
+	memcpy(elem, e, l->elem_size);
+	//memcpy(l->elem + i * l->elem_size, e, l->elem_size);
 	l->length += 1;
 
 	return OK;
@@ -167,6 +179,7 @@ status_t sqlist_elem_insert(linear_table_t *ltable, int32_t pos, void *e)
 
 status_t sqlist_elem_delete(linear_table_t *ltable, int32_t pos, void *e)
 {
+	uint8_t *elem = NULL, *elem_next = NULL;
 	int32_t i = pos - 1;
 	sqlist_t *l = (sqlist_t*)ltable;
 
@@ -175,10 +188,14 @@ status_t sqlist_elem_delete(linear_table_t *ltable, int32_t pos, void *e)
 
 	memcpy(e, l->elem + l->elem_size * i, l->elem_size);
 
-	for (; i < l->length; i++) 
-		memcpy(l->elem + i * l->elem_size, \
-				l->elem + (i+1) * l->elem_size, l->elem_size);
-	memset(l->elem + (i - 1) * l->elem_size, 0, l->elem_size);
+	elem = l->elem + (pos - 1)* l->elem_size;
+	elem_next = elem + l->elem_size;
+	for (; i < l->length; i++)  {
+		memcpy(elem, elem_next, l->elem_size);
+		elem += l->elem_size;
+		elem_next += l->elem_size;
+	}
+	memset(elem, 0, l->elem_size);
 	l->length -= 1;
 
 	return OK;
@@ -186,28 +203,29 @@ status_t sqlist_elem_delete(linear_table_t *ltable, int32_t pos, void *e)
 
 status_t sqlist_traverse(linear_table_t *ltable, visit_t visit)
 {
+	uint8_t *elem = NULL;
 	int32_t i = 0;
 	sqlist_t *l = (sqlist_t *)ltable;
 
 	if (!l || !visit)
 		return INFEASIBLE;
 
+	elem = l->elem;
 	for (; i < l->length; i++) {
-		if (visit(l->elem + i * l->elem_size) != OK)		
+		if (visit(elem) != OK)		
 			return ERROR;
+		elem += l->elem_size;
 	}
 
 	return OK;
 }
 
-/*
- *
- */
 status_t sqlist_merge(linear_table_t *ltable1, linear_table_t *ltable2, 
 					  linear_table_t *ltable_out, compare_t compare)
 {
 	int32_t i = 0, j = 0, k = 0;	
 	uint8_t *sqlist1_data = NULL, *sqlist2_data = NULL;
+	uint8_t *elem = NULL;
 	sqlist_t *sqlist1 = (sqlist_t*)ltable1, 
 			 *sqlist2 = (sqlist_t*)ltable2;
 
@@ -216,14 +234,17 @@ status_t sqlist_merge(linear_table_t *ltable1, linear_table_t *ltable2,
 	if (sqlist1->elem_size != sqlist2->elem_size)
 		return INFEASIBLE;
 
+
+	sqlist1_data = sqlist1->elem;
+	sqlist2_data = sqlist2->elem;
 	for (; i < sqlist1->length && j < sqlist2->length;) {
-		sqlist1_data = sqlist1->elem + i * sqlist1->elem_size;
-		sqlist2_data = sqlist2->elem + j * sqlist2->elem_size;
 		if (compare(sqlist1_data, sqlist2_data) == TRUE) {
 			sqlist_elem_insert(ltable_out, k++, sqlist1_data);
+			sqlist1_data += sqlist1->elem_size;
 			i++;
 		} else {
 			sqlist_elem_insert(ltable_out, k++, sqlist2_data);
+			sqlist2_data += sqlist2->elem_size;
 			j++;
 		}
 	}
