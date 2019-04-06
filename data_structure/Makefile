@@ -51,7 +51,7 @@ C_DEFS = -DUSE_HAL_DRIVER -DSTM32F303xE
 
 MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 
-INC_FLAGS = $(shell $(HEAD_CMD))	
+INC_FLAGS := $(shell $(HEAD_CMD))
 
 export CFLAGS = -g $(CPU) $(FPU) $(FLOAT-ABI) -Os  -fsigned-char -ffunction-sections -fdata-sections  $(C_DEFS) -DARM_MATH_CM0PLUS \
 	-ffunction-sections -fdata-sections $(INC_FLAGS) -MMD -MP -MF"$(@:%.o=%.cdep)" -MT"$(@)"

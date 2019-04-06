@@ -7,7 +7,7 @@ status_t sqlist_init(linear_table_t *ltable)
 	if (!ltable)
 		return INFEASIBLE;
 	if (l->elem_size == 0)
-		return ERROR;
+		return ERR;
 		
 	l->elem = (uint8_t*)calloc(LIST_INIT_SIZE, l->elem_size);
 	if (!l->elem) 
@@ -15,14 +15,15 @@ status_t sqlist_init(linear_table_t *ltable)
 	l->length = 0;
 	l->listsize = LIST_INIT_SIZE;
 
-	return OK; } 
+	return OK;
+} 
+
 status_t sqlist_uninit(linear_table_t *ltable)
 {
 	sqlist_t *l = (sqlist_t *)ltable;
 	if (!l)
 		return OK;
-	if (l->elem)
-		free(l->elem);
+	if (l->elem) free(l->elem);
 	l->length = 0;
 	l->listsize = 0;
 	l->elem_size = 0;
@@ -119,7 +120,7 @@ status_t sqlist_elem_prior(linear_table_t *ltable, void *e, void *pre_e)
 
 	pos = sqlist_elem_local_locate(ltable, e);
 	if (pos == 0 || pos == 1)
-		return ERROR;
+		return ERR;
 
 	//pos - 1是pos在线性表中的位置，
 	//pos - 2才是pos的前驱
@@ -138,7 +139,7 @@ status_t sqlist_elem_next(linear_table_t *ltable, void *e, void *next_e)
 
 	pos = sqlist_elem_local_locate(ltable, e);
 	if (pos == 0 || pos == l->length)
-		return ERROR;
+		return ERR;
 
 	memcpy(next_e, l->elem + l->elem_size * pos, l->elem_size);
 
@@ -213,7 +214,7 @@ status_t sqlist_traverse(linear_table_t *ltable, visit_t visit)
 	elem = l->elem;
 	for (; i < l->length; i++) {
 		if (visit(elem) != OK)		
-			return ERROR;
+			return ERR;
 		elem += l->elem_size;
 	}
 

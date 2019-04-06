@@ -10,6 +10,7 @@ struct test_proj {
 
 static struct test_proj g_test[] = {
 	{"sqlist", (test_create_t)linear_table_test_create},
+//	{"net", (test_create_t)net_test_create},
 };
 
 status_t test_run(char *name)
@@ -21,7 +22,7 @@ status_t test_run(char *name)
 	test_t *test = NULL;
 
 	if (!name)
-		return ERROR;
+		return ERR;
 
 	nlen = strlen(name);
 	for (; i < num; i++) {

@@ -62,7 +62,7 @@ static status_t linear_table_test_prepare(test_t *test)
 	linear_table_test_t *ltest = (linear_table_test_t *)test;
 
 	if (!ltest)
-		return ERROR;
+		return ERR;
 
 	ltest->linear_table->linear_table_init(ltest->linear_table);
 	
@@ -81,7 +81,7 @@ static status_t linear_table_test_run(test_t *test)
 	linear_table_t *ltable = NULL;
 
 	if (!test)
-		return ERROR;
+		return ERR;
 
 	ltable = ltest->linear_table;
 	//遍历测试
